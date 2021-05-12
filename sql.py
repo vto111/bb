@@ -58,9 +58,6 @@ class Sql:
         return self.cur
 
     def action(self):
-        # print(self.tables)
-        # print(self.data)
-        # print(self.check_table())
         if self.check_table():
             self.addSql()
         else:
