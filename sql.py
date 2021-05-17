@@ -1,15 +1,54 @@
 import mariadb
 import sys
 import re
+from collections import defaultdict
+from params import Params
 
 class Sql:
 
-    def __init__(self, criptopara):
-        self.data = criptopara
+    def __init__(self):
+        self.Params = Params().descbb
         self.conn = self.create_connection()
         self.cur = self.conn.cursor()
         self.tables = self.get_tables()
-        self.action()
+
+    def reset(self):
+        try:
+            self.cur.execute('TRUNCATE TABLE statsbb')
+            self.conn.commit()
+            return 'reset'
+        except mariadb.Error as e:
+            return 'reset error ' + e
+        # if self.sql_query('TRUNCATE TABLE statsbb'):
+        #     return 'TRUNCATE TABLE statsbb'
+        # else:
+        #     return 'Non TRUNCATE TABLE statsbb'
+
+    def action(self, data):
+        if self.check_table():
+            self.addSql(data)
+        else:
+            self.createTable()
+            self.addSql(data)
+        self.close_connect()
+
+    def get_top_coin_indicators(self):
+        nesteddict = lambda: defaultdict(nesteddict)
+        resDic = nesteddict()
+        statsbb = self.sql_query(
+            'SELECT * FROM statsbb WHERE cast(volume as unsigned) > 10000 ORDER BY cast(macd as unsigned) DESC')
+        n = 0
+        listCoinLen = len(Params().descbb)
+        for val in statsbb:
+            k = 0
+            while k < listCoinLen:
+                resDic[n][Params().descbb[k]] = val[k]
+                print(val[k])
+                k += 1
+            n += 1
+
+        # print(resDic)
+        return resDic
 
     def create_connection(self):
         try:
@@ -17,9 +56,9 @@ class Sql:
                 user="bb",
                 password="bb111!",
                 host="localhost",
-                database="statsmacd",
+                database="statsbb",
                 port=3306)
-            print("Connect maria db base statsmacd")
+            print("Connect maria db base statsbb")
             return self.conn
 
         except mariadb.Error as e:
@@ -32,11 +71,11 @@ class Sql:
 
     def get_tables(self):
         ar = []
-        for tablenamebase in self.get_select("SHOW TABLES"):
+        for tablenamebase in self.sql_query("SHOW TABLES"):
             ar.append(re.sub('[^a-zA-Z0-9]', '', str(tablenamebase)))
         return ar
 
-    def get_select(self, query):
+    def sql_query(self, query):
         self.cur.execute(query)
         ar = []
         for databasename in self.cur:
@@ -45,25 +84,32 @@ class Sql:
         return ar
 
     def check_table(self):
-        return self.data[0] in self.tables
+        return 'statsbb' in self.tables
 
-    def addSql(self):
-        query = "INSERT INTO " + self.data[0] + " (" + self.data[1] + ", " + self.data[3] + ") VALUES (" + self.data[2] + ", " + self.data[4] + ")"
+    def addSql(self, data):
+        query = "INSERT INTO statsbb ("
+        queryCol = ""
+        queryVal = ""
+        for col in data:
+            queryCol += col + ", "
+            queryVal += '"' + data[col] + '", '
+
+        query += queryCol[:-2] + ") VALUES (" + queryVal[:-2] + ")"
         self.cur.execute(query)
         self.conn.commit()
         return self.cur
 
     def createTable(self):
-        self.cur.execute("CREATE TABLE " + self.data[0] + "(" + self.data[1] + " varchar(255), " + self.data[3] + " varchar(255))")
+        query = "CREATE TABLE statsbb ("
+        for col in self.Params:
+            query += col + ' varchar(255), '
+
+        query = query[:-2] + ")"
+
+        self.cur.execute(query)
         return self.cur
 
-    def action(self):
-        if self.check_table():
-            self.addSql()
-        else:
-            self.createTable()
-            self.addSql()
-        self.close_connect()
+
 
 
 

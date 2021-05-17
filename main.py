@@ -1,39 +1,44 @@
 import sys
 sys.path.append('../')
 
-from macd import Macd
+from indicators import Indicators
 from sql import Sql
 from coins import Coins
-from spread import Spread
-
-# coin = "BNBBTC"
-# getmacd = Macd(coin)
-# macd = getmacd.action()
-# spread = Spread(coin)
-# spredPerc = str(spread.get_order_book())
-# print(macd)
-# if float(macd) > 0:
-#     print(float(macd))
-# else:
-#     print(type(float(macd)))
+from params import Params
 
 
-# Sql([coin, 'macd', macd, 'spreadPerc', spredPerc])
+onoff = 2
 
+if onoff == 1:
+    coin = "BCCBTC" #"EURUSDT"
+    indicators = Indicators(coin)
+    macd = indicators.macd()
+    rsi = indicators.rsi()
+    spredPerc = indicators.spreadPerc()
+    volume = indicators.volume()
+    rank = indicators.rank()
+    print(coin + ' macd ' +  macd + ' spreadPerc ' + spredPerc + ' rsi ' + rsi + ' volume ' + volume + ' rank ' + rank)
 
-coins = Coins()
-arCoins = coins.getCoins()
-for coin in arCoins:
-    getmacd = Macd(coin)
-    macd = getmacd.action()
-    spread = Spread(coin)
-    spredPerc = str(spread.get_order_book())
-    if float(macd) > 0 and float(spredPerc) > 0.6:
-        print("MACD > 0 " + coin)
-        Sql([coin, 'macd', macd, 'spreadPerc', spredPerc])
+    colParamsValue = {'coin':coin, 'macd':macd, 'spreadPerc':spredPerc, 'rsi':rsi, 'volume':volume, 'rank':rank}
+    Sql().action(colParamsValue)
 
+if onoff == 2:
+    try:
+        coins = Coins()
+        arCoins = coins.getCoins()
+        for coin in arCoins:
+            indicators = Indicators(coin)
+            macd = indicators.macd()
+            rsi = indicators.rsi()
+            spredPerc = indicators.spreadPerc()
+            volume = indicators.volume()
+            rank = indicators.rank()
 
+            if float(macd) > 0 and float(spredPerc) > 0.6 and float(rsi) > 0:
+                print("MACD > 0 " + coin)
+                colParamsValue = {'coin': coin, 'macd': macd, 'spreadPerc': spredPerc, 'rsi': rsi, 'volume': volume,
+                                  'rank': rank}
+                Sql().action(colParamsValue)
+    except Exception as e:
+        print("Exception: {0}".format(e))
 
-# print(spredPerc)
-# print(spread.get_order_book())
-# print(spread.get_recent_trades())c

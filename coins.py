@@ -4,9 +4,6 @@ from authorization import Authorization
 class Coins:
 
     def __init__(self):
-        # secret = Authorization()
-
-        # self.client = Client(secret.key, secret.secret)
         autorization = Authorization()
 
         self.client = autorization.getClient()
