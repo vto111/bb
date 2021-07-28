@@ -43,11 +43,9 @@ class Sql:
             k = 0
             while k < listCoinLen:
                 resDic[n][Params().descbb[k]] = val[k]
-                print(val[k])
                 k += 1
             n += 1
 
-        # print(resDic)
         return resDic
 
     def create_connection(self):
