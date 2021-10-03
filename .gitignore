@@ -1,4 +1,5 @@
 /bb/
+/env/
 .idea/
 __pycache__/
 authorization.py
